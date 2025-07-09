@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Mini Social App</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+        }
+
+        .navbar {
+            background-color: #4267B2;
+            padding: 15px 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        input[type="text"],
+        textarea,
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background-color: #4267B2;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background-color: #365899;
+        }
+
+        .post {
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .post img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .post strong {
+            font-size: 16px;
+        }
+
+        .comment-box {
+            margin-top: 10px;
+        }
+
+        .comment-box input {
+            width: calc(100% - 80px);
+            display: inline-block;
+        }
+
+        .comment-box button {
+            width: 70px;
+            display: inline-block;
+        }
+
+        .logout-form {
+            margin: 0;
+        }
+
+        .logout-form button {
+            background-color: #ff4d4d;
+        }
+
+        .logout-form button:hover {
+            background-color: #e03e3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>Mini Social</h2>
+        <form method="post" action="{% url 'logout' %}" class="logout-form">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h3>Welcome, {{ request.user.username }} 👋</h3>
+
+        <!-- Create Post -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Post</button>
+        </form>
+
+        <h3>Recent Posts</h3>
+
+        {% for post in posts %}
+            <div class="post">
+                <strong>{{ post.user.username }}</strong>
+                <p>{{ post.content }}</p>
+
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="Post image">
+                {% endif %}
+
+                <p><small>{{ post.created_at }}</small></p>
+
+                <!-- Like -->
+                <form action="{% url 'like_post' post.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">❤️ {{ post.likes.count }} Like{% if post.likes.count != 1 %}s{% endif %}</button>
+                </form>
+
+                <!-- Comments -->
+                <div>
+                    <h4>Comments ({{ post.comments.count }})</h4>
+                    <ul>
+                        {% for comment in post.comments.all %}
+                            <li><strong>{{ comment.user.username }}</strong>: {{ comment.content }}</li>
+                        {% empty %}
+                            <li>No comments yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Add comment -->
+                <form method="post" action="{% url 'add_comment' post.id %}" class="comment-box">
+                    {% csrf_token %}
+                    <input type="text" name="comment" placeholder="Write a comment..." required>
+                    <button type="submit">💬</button>
+                </form>
+            </div>
+        {% empty %}
+            <p>No posts yet.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
